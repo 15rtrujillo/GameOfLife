@@ -1,17 +1,43 @@
-[gd_scene load_steps=2 format=3 uid="uid://tnx1cp3flgrb"]
+[gd_scene load_steps=7 format=3 uid="uid://tnx1cp3flgrb"]
 
 [ext_resource type="Script" path="res://Main.cs" id="1_ouaqv"]
 
-[node name="Main" type="Control"]
+[sub_resource type="Theme" id="Theme_oktgq"]
+default_font_size = 24
+
+[sub_resource type="InputEventKey" id="InputEventKey_g5fms"]
+device = -1
+keycode = 4194309
+
+[sub_resource type="Shortcut" id="Shortcut_it645"]
+events = [SubResource("InputEventKey_g5fms")]
+
+[sub_resource type="InputEventKey" id="InputEventKey_o4v4n"]
+device = -1
+keycode = 32
+unicode = 32
+
+[sub_resource type="Shortcut" id="Shortcut_ujm27"]
+events = [SubResource("InputEventKey_o4v4n")]
+
+[node name="Main" type="Control" node_paths=PackedStringArray("_labelTitle", "_grid", "_labelGeneration", "_spinBoxInitialAlive", "_spinBoxInterval", "_spinBoxRows", "_spinBoxColumns", "_buttonRestart", "_buttonPlayPause")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = SubResource("Theme_oktgq")
 script = ExtResource("1_ouaqv")
-Rows = 25
-Columns = 25
+_labelTitle = NodePath("VBoxMain/HBoxTitle/LabelTitle")
+_grid = NodePath("VBoxMain/HBoxContent/MarginGrid/Grid")
+_labelGeneration = NodePath("VBoxMain/HBoxTitle/LabelGeneration")
+_spinBoxInitialAlive = NodePath("VBoxMain/HBoxContent/MarginConfig/VBoxConfig/SpinBoxAliveChance")
+_spinBoxInterval = NodePath("VBoxMain/HBoxContent/MarginConfig/VBoxConfig/SpinBoxInterval")
+_spinBoxRows = NodePath("VBoxMain/HBoxContent/MarginConfig/VBoxConfig/SpinBoxRows")
+_spinBoxColumns = NodePath("VBoxMain/HBoxContent/MarginConfig/VBoxConfig/SpinBoxColumns")
+_buttonRestart = NodePath("VBoxMain/HBoxContent/MarginConfig/VBoxConfig/ButtonRestart")
+_buttonPlayPause = NodePath("VBoxMain/HBoxContent/MarginConfig/VBoxConfig/ButtonPlayPause")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -20,21 +46,135 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.0962047, 0.0962048, 0.0962047, 1)
+color = Color(0.209429, 0.209429, 0.209429, 1)
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="VBoxMain" type="VBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+size_flags_horizontal = 3
+alignment = 1
 
-[node name="Grid" type="GridContainer" parent="MarginContainer"]
+[node name="HBoxTitle" type="HBoxContainer" parent="VBoxMain"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 10.0
+alignment = 1
+
+[node name="LabelGeneration" type="Label" parent="VBoxMain/HBoxTitle"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 30.0
+text = "Generation: 0
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LabelTitle" type="Label" parent="VBoxMain/HBoxTitle"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 70.0
+theme_override_font_sizes/font_size = 36
+text = "Conway's Game of Life"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContent" type="HBoxContainer" parent="VBoxMain"]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 90.0
+alignment = 1
+
+[node name="MarginConfig" type="MarginContainer" parent="VBoxMain/HBoxContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 30.0
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxConfig" type="VBoxContainer" parent="VBoxMain/HBoxContent/MarginConfig"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 20.0
+alignment = 1
+
+[node name="LabelAliveChance" type="Label" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+text = "Initial Alive Chance:"
+
+[node name="SpinBoxAliveChance" type="SpinBox" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+value = 50.0
+rounded = true
+suffix = "%"
+
+[node name="LabelInterval" type="Label" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+text = "Generation Interval:"
+
+[node name="SpinBoxInterval" type="SpinBox" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+min_value = 1.0
+max_value = 5000.0
+value = 1000.0
+rounded = true
+allow_greater = true
+allow_lesser = true
+update_on_text_changed = true
+suffix = "ms"
+
+[node name="LabelRows" type="Label" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+text = "Rows:"
+vertical_alignment = 1
+
+[node name="SpinBoxRows" type="SpinBox" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+min_value = 5.0
+max_value = 255.0
+value = 10.0
+rounded = true
+allow_lesser = true
+
+[node name="LabelColumns" type="Label" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+text = "Columns:"
+vertical_alignment = 1
+
+[node name="SpinBoxColumns" type="SpinBox" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+min_value = 5.0
+max_value = 255.0
+value = 10.0
+rounded = true
+allow_lesser = true
+
+[node name="ButtonRestart" type="Button" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+shortcut = SubResource("Shortcut_it645")
+text = "Apply and Reset"
+
+[node name="ButtonPlayPause" type="Button" parent="VBoxMain/HBoxContent/MarginConfig/VBoxConfig"]
+layout_mode = 2
+shortcut = SubResource("Shortcut_ujm27")
+text = "Start"
+
+[node name="MarginGrid" type="MarginContainer" parent="VBoxMain/HBoxContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 80.0
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Grid" type="GridContainer" parent="VBoxMain/HBoxContent/MarginGrid"]
 layout_mode = 2
 theme_override_constants/h_separation = 5
 theme_override_constants/v_separation = 5
