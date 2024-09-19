@@ -5,24 +5,33 @@ namespace GameOfLife;
 
 class Game
 {
-	private static Board _board;
+	private static Board board;
+
+	private static byte[] twoNeighbors = new byte[28];
+	private static byte[] threeNeighbors = new byte[56];
 
 	public delegate void BoardChangedEvent(List<Patch> patches);
-
 	public static BoardChangedEvent BoardChanged;
 
 	public static void InitBoard(int rows, int columns, int aliveChance)
 	{
-		_board = new Board(rows, columns);
-		_board.RandomInitialization(aliveChance);
+		// Lookup table init
+		if (twoNeighbors.Length == 0)
+		{
+			ComputeTwoNeighbors();
+			ComputeThreeNeighbors();
+		}
+
+		board = new Board(rows, columns);
+		board.RandomInitialization(aliveChance);
 
 		// Generate initial patches
 		List<Patch> patches = new();
-		for (int row = 0; row < _board.Rows; ++row)
+		for (int row = 0; row < board.Rows; ++row)
 		{
-			for (int column = 0; column < _board.Columns; ++column)
+			for (int column = 0; column < board.Columns; ++column)
 			{
-				if (!_board[row, column])
+				if (!board[row, column])
 				{
 					continue;
 				}
@@ -31,7 +40,7 @@ class Game
 				{
 					Row = (byte)row,
 					Column = (byte)column,
-					NewValue = _board[row, column]
+					NewValue = board[row, column]
 				});
 			}
 		}
@@ -42,11 +51,11 @@ class Game
 	public static void DoGeneration()
 	{
 		List<Patch> patches = new();
-		for (int row = 0; row < _board.Rows; ++row)
+		for (int row = 0; row < board.Rows; ++row)
 		{
-			for (int column = 0; column < _board.Columns; ++column)
+			for (int column = 0; column < board.Columns; ++column)
 			{
-				bool currentValue = _board[row, column];
+				bool currentValue = board[row, column];
 				bool newValue = CheckAdjacentTiles(row, column, currentValue);
 
 				if (currentValue != newValue)
@@ -64,7 +73,7 @@ class Game
 		// Use the patches to update the board
 		foreach (Patch patch in patches)
 		{
-			_board[patch.Row, patch.Column] = patch.NewValue;
+			board[patch.Row, patch.Column] = patch.NewValue;
 		}
 
 		// Signal the GUI to update the board.
@@ -84,7 +93,7 @@ class Game
 					continue;
 				}
 
-				if (_board[row + checkRow, column + checkColumn])
+				if (board[row + checkRow, column + checkColumn])
 				{
 					++adjacentAlive;
 				}
@@ -120,5 +129,37 @@ class Game
 		}
 
 		return false;
+	}
+
+	private static void ComputeTwoNeighbors()
+	{
+		int index = 0;
+		for (int i = 0; i < 7; ++i)
+		{
+			int bitmask = 1 << i;
+			for (int j = i + 1; i < 8; ++j)
+			{
+				bitmask |= 1 << j;
+				twoNeighbors[index++] = (byte)bitmask;
+			}
+		}
+	}
+
+	private static void ComputeThreeNeighbors()
+	{
+		int index = 0;
+		for (int i = 0; i < 6; ++i)
+		{
+			int bitmask = 1 << i;
+			for (int j = i + 1; i < 7; ++j)
+			{
+				bitmask |= 1 << j;
+				for (int k = j + 1; k < 8; ++k)
+				{
+					bitmask |= 1 << k;
+					threeNeighbors[index++] = (byte) bitmask;
+				}
+			}
+		}
 	}
 }
