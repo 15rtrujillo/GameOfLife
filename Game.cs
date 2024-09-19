@@ -1,27 +1,35 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace GameOfLife;
 
 class Game
 {
-    private static Board _board;
+    private static Board board;
+	private static readonly Stopwatch stopwatch = new();
+	private static int generation;
+	private static double timeSum;
 
     public delegate void BoardChangedEvent(List<Patch> patches);
-
     public static BoardChangedEvent BoardChanged;
+	public delegate void GenerationCompletedEvent(int generation, double averageTime);
+	public static GenerationCompletedEvent GenerationCompleted;
 
-    public static void InitBoard(int rows, int columns, int aliveChance)
-    {
-        _board = new Board(rows, columns);
-        _board.RandomInitialization(aliveChance);
+	public static void InitBoard(int rows, int columns, int aliveChance)
+	{
+        generation = 0;
+        timeSum = 0.0;
+
+		board = new Board(rows, columns);
+		board.RandomInitialization(aliveChance);
 
         // Generate initial patches
         List<Patch> patches = new();
-        for (int row = 0; row < _board.Rows; ++row)
+        for (int row = 0; row < board.Rows; ++row)
         {
-            for (int column = 0; column < _board.Columns; ++column)
+            for (int column = 0; column < board.Columns; ++column)
             {
-                if (!_board[row, column])
+                if (!board[row, column])
                 {
                     continue;
                 }
@@ -30,23 +38,25 @@ class Game
                 {
                     Row = (byte)row,
                     Column = (byte)column,
-                    NewValue = _board[row, column]
+                    NewValue = board[row, column]
                 });
             }
         }
 
-        BoardChanged(patches);
-    }
+		BoardChanged(patches);
+		GenerationCompleted(generation, timeSum);
+	}
 
-    public static void DoGeneration()
-    {
-        List<Patch> patches = new();
-        for (int row = 0; row < _board.Rows; ++row)
-        {
-            for (int column = 0; column < _board.Columns; ++column)
-            {
-                bool currentValue = _board[row, column];
-                bool newValue = CheckAdjacentTiles(row, column, currentValue);
+	public static void DoGeneration()
+	{
+        stopwatch.Start();
+		List<Patch> patches = new();
+		for (int row = 0; row < board.Rows; ++row)
+		{
+			for (int column = 0; column < board.Columns; ++column)
+			{
+				bool currentValue = board[row, column];
+				bool newValue = CheckAdjacentTiles(row, column, currentValue);
 
                 if (currentValue != newValue)
                 {
@@ -60,15 +70,25 @@ class Game
             }
         }
 
-        // Use the patches to update the board
-        foreach (Patch patch in patches)
-        {
-            _board[patch.Row, patch.Column] = patch.NewValue;
-        }
+		// Use the patches to update the board
+		foreach (Patch patch in patches)
+		{
+			board[patch.Row, patch.Column] = patch.NewValue;
+		}
+        stopwatch.Stop();
 
-        // Signal the GUI to update the board.
-        BoardChanged(patches);
-    }
+		// Signal the GUI to update the board.
+		BoardChanged(patches);
+
+		// Calculate the average compute time
+		double computeTime = stopwatch.Elapsed.TotalMilliseconds;
+		stopwatch.Reset();
+		timeSum += computeTime;
+		++generation;
+
+		// Signal the GUI
+		GenerationCompleted(generation, timeSum / generation);
+	}
 
     private static bool CheckAdjacentTiles(int row, int column, bool alive)
     {
@@ -83,7 +103,7 @@ class Game
                     continue;
                 }
 
-                if (_board[row + checkRow, column + checkColumn])
+                if (board[row + checkRow, column + checkColumn])
                 {
                     ++adjacentAlive;
                 }

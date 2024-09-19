@@ -69,6 +69,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 30.0
 text = "Generation: 0
+Average Time: 0 ms
 "
 horizontal_alignment = 1
 vertical_alignment = 1

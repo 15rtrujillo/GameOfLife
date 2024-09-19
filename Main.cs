@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 
@@ -45,14 +46,14 @@ public partial class Main : Control
     [Export]
     private Button _buttonPlayPause;
 
-    private State _state = State.Stopped;
-    private ColorRect[,] _tiles;
-    private Timer _timer;
-    private int _generation;
+	private State _state = State.Stopped;
+	private ColorRect[,] _tiles;
+	private Timer _timer;
 
-    public override void _Ready()
-    {
-        Game.BoardChanged += UpdateBoard;
+	public override void _Ready()
+	{
+		Game.BoardChanged += UpdateBoard;
+		Game.GenerationCompleted += UpdateGenerationLabel;
 
         _spinBoxInitialAlive.Value = InitialAliveChance;
         _spinBoxInterval.Value = GenerationInterval * 1000;
@@ -65,11 +66,11 @@ public partial class Main : Control
         Setup();
     }
 
-    private void Setup()
-    {
-        // Setup GUI
-        _buttonPlayPause.Text = "Start";
-        UpdateGenerationLabel();
+	private void Setup()
+	{
+		// Setup GUI
+		_buttonPlayPause.Text = "Start";
+		UpdateGenerationLabel(0, 0.0);
 
         _grid.Columns = Columns;
 
@@ -98,10 +99,9 @@ public partial class Main : Control
         _timer.Timeout += TimerTimeout;
         AddChild(_timer);
 
-        // Setup data
-        _generation = 0;
-        Game.InitBoard(Rows, Columns, InitialAliveChance);
-    }
+		// Setup data
+		Game.InitBoard(Rows, Columns, InitialAliveChance);
+	}
 
     private void UpdateBoard(List<Patch> patches)
     {
@@ -146,13 +146,10 @@ public partial class Main : Control
         }
     }
 
-    private void TimerTimeout()
-    {
-        ++_generation;
-        UpdateGenerationLabel();
-
-        Game.DoGeneration();
-    }
+	private void TimerTimeout()
+	{
+		Game.DoGeneration();
+	}
 
     private void Pause()
     {
@@ -168,8 +165,8 @@ public partial class Main : Control
         _state = State.Running;
     }
 
-    public void UpdateGenerationLabel()
-    {
-        _labelGeneration.Text = $"Generation: {_generation}";
-    }
+	public void UpdateGenerationLabel(int generation, double averageTime)
+	{
+		_labelGeneration.Text = $"Generation: {generation}\nAverage Time: {Math.Round(averageTime, 2)} ms";
+	}
 }
