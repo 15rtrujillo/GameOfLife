@@ -6,6 +6,9 @@ namespace GameOfLife;
 class Game
 {
 	private static Board board;
+	private static readonly Stopwatch stopwatch = new();
+	private static int generation;
+	private static double timeSum;
 
 	private static bool initializedTables = false;
 	private static readonly byte[] twoNeighborsTable = new byte[28];
@@ -13,6 +16,8 @@ class Game
 
 	public delegate void BoardChangedEvent(List<Patch> patches);
 	public static BoardChangedEvent BoardChanged;
+	public delegate void GenerationCompletedEvent(int generation, double averageTime);
+	public static GenerationCompletedEvent GenerationCompleted;
 
 	public static void InitBoard(int rows, int columns, int aliveChance)
 	{
@@ -23,6 +28,9 @@ class Game
 			ComputeThreeNeighbors();
 			initializedTables = true;
 		}
+
+		generation = 0;
+		timeSum = 0.0;
 
 		board = new Board(rows, columns);
 		board.RandomInitialization(aliveChance);
@@ -48,10 +56,12 @@ class Game
 		}
 
 		BoardChanged(patches);
+		GenerationCompleted(generation, timeSum);
 	}
 
 	public static void DoGeneration()
 	{
+		stopwatch.Start();
 		List<Patch> patches = new();
 		for (int row = 0; row < board.Rows; ++row)
 		{
@@ -77,9 +87,19 @@ class Game
 		{
 			board[patch.Row, patch.Column] = patch.NewValue;
 		}
+		stopwatch.Stop();
 
 		// Signal the GUI to update the board.
 		BoardChanged(patches);
+
+		// Calculate the average compute time
+		double computeTime = stopwatch.Elapsed.TotalMilliseconds;
+		stopwatch.Reset();
+		timeSum += computeTime;
+		++generation;
+
+		// Signal the GUI
+		GenerationCompleted(generation, timeSum / generation);
 	}
 
 	private static bool CheckAdjacentTiles(int row, int column, bool alive)

@@ -49,11 +49,11 @@ public partial class Main : Control
 	private State _state = State.Stopped;
 	private ColorRect[,] _tiles;
 	private Timer _timer;
-	private int _generation;
 
 	public override void _Ready()
 	{
 		Game.BoardChanged += UpdateBoard;
+		Game.GenerationCompleted += UpdateGenerationLabel;
 
 		_spinBoxInitialAlive.Value = InitialAliveChance;
 		_spinBoxInterval.Value = GenerationInterval * 1000;
@@ -70,7 +70,7 @@ public partial class Main : Control
 	{
 		// Setup GUI
 		_buttonPlayPause.Text = "Start";
-		UpdateGenerationLabel();
+		UpdateGenerationLabel(0, 0.0);
 
 		_grid.Columns = Columns;
 
@@ -100,7 +100,6 @@ public partial class Main : Control
 		AddChild(_timer);
 
 		// Setup data
-		_generation = 0;
 		Game.InitBoard(Rows, Columns, InitialAliveChance);
 	}
 
@@ -149,9 +148,6 @@ public partial class Main : Control
 
 	private void TimerTimeout()
 	{
-		++_generation;
-		UpdateGenerationLabel();
-
 		Game.DoGeneration();
 	}
 
@@ -169,8 +165,8 @@ public partial class Main : Control
 		_state = State.Running;
 	}
 
-	public void UpdateGenerationLabel()
+	public void UpdateGenerationLabel(int generation, double averageTime)
 	{
-		_labelGeneration.Text = $"Generation: {_generation}";
+		_labelGeneration.Text = $"Generation: {generation}\nAverage Time: {Math.Round(averageTime, 2)} ms";
 	}
 }
