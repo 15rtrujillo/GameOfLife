@@ -7,8 +7,9 @@ class Game
 {
 	private static Board board;
 
-	private static byte[] twoNeighbors = new byte[28];
-	private static byte[] threeNeighbors = new byte[56];
+	private static bool initializedTables = false;
+	private static readonly byte[] twoNeighborsTable = new byte[28];
+	private static readonly byte[] threeNeighborsTable = new byte[56];
 
 	public delegate void BoardChangedEvent(List<Patch> patches);
 	public static BoardChangedEvent BoardChanged;
@@ -16,10 +17,11 @@ class Game
 	public static void InitBoard(int rows, int columns, int aliveChance)
 	{
 		// Lookup table init
-		if (twoNeighbors.Length == 0)
+		if (!initializedTables)
 		{
 			ComputeTwoNeighbors();
 			ComputeThreeNeighbors();
+			initializedTables = true;
 		}
 
 		board = new Board(rows, columns);
@@ -82,50 +84,62 @@ class Game
 
 	private static bool CheckAdjacentTiles(int row, int column, bool alive)
 	{
-		int adjacentAlive = 0;
-		for (int checkRow = -1; checkRow <= 1; ++checkRow)
+		int neighborFlags = 0;
+		int bitIndex = 0;
+		for (int checkedRow = -1; checkedRow <= 1; ++checkedRow)
 		{
-			for (int checkColumn = -1; checkColumn <= 1; ++checkColumn)
+			for (int checkedColumn = -1; checkedColumn <= 1; ++checkedColumn)
 			{
-				// We don't want to check ourself
-				if (checkRow == 0 && checkColumn == 0)
+				// Don't check the current tile
+				if (checkedRow == 0 && checkedColumn == 0)
 				{
 					continue;
 				}
 
-				if (board[row + checkRow, column + checkColumn])
+				if (board[row + checkedRow, column + checkedColumn])
 				{
-					++adjacentAlive;
+					neighborFlags |= 1 << bitIndex;
 				}
-
-				// Any live cell with more than 3 alive neighbors dies.
-				if (alive && adjacentAlive > 3)
-				{
-					return false;
-				}
+				++bitIndex;
 			}
 		}
-
-		// Any live cell...
+		
+		// Any alive cell...
 		if (alive)
 		{
-			// ...with less than two live neighbors dies.
-			if (adjacentAlive < 2)
+			// ...with two or three live neighbors lives on
+			if (IsInTable((byte)neighborFlags, twoNeighborsTable) || IsInTable((byte)neighborFlags, threeNeighborsTable))
+			{
+				return true;
+			}
+
+			// ...with less than two or more than three live neighbors dies.
+			else
 			{
 				return false;
 			}
+		}
 
-			// ...with two or three live neighbors lives on.
-			else
+		else
+		{
+			// Any dead cell with exactly three live neighbors becomes alive.
+			if (IsInTable((byte)neighborFlags, threeNeighborsTable))
 			{
 				return true;
 			}
 		}
 
-		// Any dead cell with exactly three live neighbors becomes alive.
-		else if (adjacentAlive == 3)
+		return false;
+	}
+
+	private static bool IsInTable(byte neighbors, byte[] table)
+	{
+		foreach (byte perm in table)
 		{
-			return true;
+			if (perm == neighbors)
+			{
+				return true;
+			}
 		}
 
 		return false;
@@ -137,10 +151,13 @@ class Game
 		for (int i = 0; i < 7; ++i)
 		{
 			int bitmask = 1 << i;
-			for (int j = i + 1; i < 8; ++j)
+			for (int j = i + 1; j < 8; ++j)
 			{
 				bitmask |= 1 << j;
-				twoNeighbors[index++] = (byte)bitmask;
+				twoNeighborsTable[index++] = (byte)bitmask;
+
+				// Unset the bit so we can move on
+				bitmask &= ~(1 << j);
 			}
 		}
 	}
@@ -151,14 +168,20 @@ class Game
 		for (int i = 0; i < 6; ++i)
 		{
 			int bitmask = 1 << i;
-			for (int j = i + 1; i < 7; ++j)
+			for (int j = i + 1; j < 7; ++j)
 			{
 				bitmask |= 1 << j;
 				for (int k = j + 1; k < 8; ++k)
 				{
 					bitmask |= 1 << k;
-					threeNeighbors[index++] = (byte) bitmask;
+					threeNeighborsTable[index++] = (byte)bitmask;
+
+					// Unset the bit so we can move on
+					bitmask &= ~(1 << k);
 				}
+
+				// Unset the bit so we can move on
+				bitmask &= ~(1 << j);
 			}
 		}
 	}
