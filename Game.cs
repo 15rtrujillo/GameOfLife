@@ -61,8 +61,8 @@ class Game
 
 	public static void DoGeneration()
 	{
-		stopwatch.Start();
 		List<Patch> patches = new();
+		stopwatch.Start();
 		for (int row = 0; row < board.Rows; ++row)
 		{
 			for (int column = 0; column < board.Columns; ++column)
@@ -124,29 +124,16 @@ class Game
 			}
 		}
 		
-		// Any alive cell...
-		if (alive)
+		// Any cell with three neighbors lives
+		if (IsInTable((byte)neighborFlags, threeNeighborsTable))
 		{
-			// ...with two or three live neighbors lives on
-			if (IsInTable((byte)neighborFlags, twoNeighborsTable) || IsInTable((byte)neighborFlags, threeNeighborsTable))
-			{
-				return true;
-			}
-
-			// ...with less than two or more than three live neighbors dies.
-			else
-			{
-				return false;
-			}
+			return true;
 		}
 
-		else
+		// Any alive cell with two neighbors lives
+		if (alive && IsInTable((byte)neighborFlags, twoNeighborsTable))
 		{
-			// Any dead cell with exactly three live neighbors becomes alive.
-			if (IsInTable((byte)neighborFlags, threeNeighborsTable))
-			{
-				return true;
-			}
+			return true;
 		}
 
 		return false;
