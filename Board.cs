@@ -3,7 +3,7 @@ using System.Collections;
 
 namespace GameOfLife;
 
-public class Board : IEnumerable
+public class Board
 {
     private static Random _random = new();
 
@@ -23,12 +23,12 @@ public class Board : IEnumerable
     {
         get
         {
-            return _board[Mod(row, Rows), Mod(column, Columns)];
+            return _board[BoundDimension(row, Rows), BoundDimension(column, Columns)];
         }
 
         set
         {
-            _board[Mod(row, Rows), Mod(column, Columns)] = value;
+            _board[BoundDimension(row, Rows), BoundDimension(column, Columns)] = value;
         }
     }
 
@@ -43,13 +43,18 @@ public class Board : IEnumerable
         }
     }
 
-    private static int Mod(int a, int b)
+    private static int BoundDimension(int dimension, int max)
     {
-        return a - b * (int)Math.Floor((double)a / b);
-    }
+        if (dimension >= max)
+        {
+            return 0;
+        }
 
-    public IEnumerator GetEnumerator()
-    {
-        return _board.GetEnumerator();
+        if (dimension < 0)
+        {
+            return max - 1;
+        }
+
+        return dimension;
     }
 }
